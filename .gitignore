@@ -1,0 +1,6 @@
+.idea
+venv
+*~
+*.swp
+*.pytest_cache
+
