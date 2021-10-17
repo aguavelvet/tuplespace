@@ -1,0 +1,101 @@
+[
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "kermit",
+	"lastName"  : "frog",
+	"fullName"  : "Kermit the Frog",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "cookie",
+	"lastName"  : "monster",
+	"fullName"  : "Cookie Monster",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Big",
+	"lastName"  : "Bird",
+	"fullName"  : "Big Bird",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Piggy",
+	"lastName"  : "Lee",
+	"fullName"  : "Ms. Piggy",
+	"title" : "Ms",
+	"gender" : { "Code" : "F", "Name": "Female"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Aloysius",
+	"lastName"  : "Snuffleupagus",
+	"fullName"  : "Aloysius Snuffleupagus",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Grover",
+	"lastName"  : "Monster",
+	"fullName"  : "Grover the Monster",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Count",
+	"lastName"  : "von Count",
+	"fullName"  : "Aloysius Snuffleupagus",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Oscar",
+	"lastName"  : "Grouch",
+	"fullName"  : "Oscar the Grouchs",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    },
+    {
+	"workspace" : "PROTO-1",
+	"type" : "import",
+	"business-entity" : "c360.person",
+	"firstName" : "Fozzy",
+	"lastName"  : "Bear",
+	"fullName"  : "Fozzy Bear",
+	"title" : "Mr",
+	"gender" : { "Code" : "M", "Name": "Male"},
+	"maritalStatus" : { "Code" : "Single", "Name" : "Single"}
+    }
+]
