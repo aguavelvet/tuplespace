@@ -7,13 +7,13 @@ from tuplespace.taskitem import TaskItem
 
 class AbstractTaskProcessor(threading.Thread):
 
-    task_queue = queue.Queue(1000)
 
     def __init__ (self, request_state, post_state):
         threading.Thread.__init__(self)
         self.request_state = request_state
         self.post_state = post_state
         self.headers = {'Content-type': 'application/json;charset=UTF-8'}
+        self.task_queue = queue.Queue(1000)
 
     def reregister_state (self, request_state, post_state) :
         self.request_state = request_state

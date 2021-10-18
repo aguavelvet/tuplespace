@@ -19,6 +19,9 @@ if __name__ == "__main__":
 
             print (f" Status = {resp.status} on POST")
 
+            if True:
+                break;
+
             time.sleep (2)
 
 

@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 from workers import WorkerRegistry
 from tuplespace import tuplespace
+from workers.abstract_task_processor import AbstractTaskProcessor
 from workers.compute_task_processor import ComputeTaskProcessor
 from workers.embellish_task_processor import EmbellishTaskProcessor
 from workers.persist_task_processor import PersistTaskProcessor
@@ -31,21 +32,33 @@ def notification():
     :return:
     '''
     rqst = request
+    tmap = task_map
 
     state = request.args.get("state")
     new_state = request.args.get("new_req_state")
     post_state = request.args.get("new_post_state")
 
-    if new_state is None or post_state is None:
+    if new_state is None and post_state is None:
         # notify the worker thread that work is available.
-        t = task_map[state].task_queue.put (state)
+        if "COMPUTE" == state or "COMPUTE_THRESHOLD" == state:
+            print ("COMPUTE")
+
+        if state in task_map:
+            print (f"requesting {state} processing to {task_map[state].__class__.__name__}")
+            t = task_map[state].task_queue.put (state)
+        else:
+            print (f'{state} not found in task_map {json.dumps(task_map, indent=4)}')
     else:
-        # states have changed.  This means, someone has added/removed the current work flow.
+        # state change request.   This means, someone has added/removed the current work flow.
         # So, we are now listening to a new request state and updating the new post work state.
-        t = task_map[state]
-        del task_map[state]
-        t.reregister_state (new_state, post_state)
-        task_map[new_state] = t
+        if state in task_map:
+            t = task_map[state]
+
+            del task_map[state]
+            task_map[new_state] = t
+
+            t.reregister_state (new_state, post_state)
+
 
     status = 200
     resp = {"status": status, "response": f"received notification for {state}"}
@@ -60,25 +73,26 @@ def register_to_tuplespace (port):
     for k,v in task_map.items():
         data = { "id" : f"processor-{os.getpid()}",
                  "state" : k,
+                 "post_state" : v.post_state,
                  "host" : "localhost",
                  "port" : port,
                  "endpoint" : f"/worker/processor/notify?state={k}",
                  "url" : f"http://localhost:{port}/worker/processor/notify?state={k}"
                  }
         resp = requests.post (url="http://localhost:5050/tuplespace/api/v1/register", data=data)
-        print (f"Registered {k} and got {resp.status_code}")
+        print (f"Registered {data} to {v.__class__.__name__} and got {resp.status_code}")
 
 
-def reregister_state (current_state, new_req_state, new_post_state):
+def reregister_state (current_state, request_state, post_state):
     #  reregister ("COMPUTE", "COMPUTE-THRESHOLD", "PERSIST")
     data = {
         "current_state": current_state,
-        "new_req_state": new_req_state,
-        "new_post_state": new_post_state
+        "new_req_state": request_state,
+        "new_post_state": post_state
     }
-    resp = request.post(url="http://localhost:5050/tuplespace/api/v1/reregister-state", data=data)
+    resp = requests.post(url="http://localhost:5050/tuplespace/api/v1/reregister-state", data=data)
 
-    print(f"Re-registered {current_state} to ({new_req_state}, {new_post_state}) and got {resp.status_code}")
+    print(f"Re-registered {current_state}  to ({request_state}, {post_state}) and got {resp.status_code}")
 
 
 def usage (msg=None,code=0):
@@ -103,10 +117,18 @@ def initialize_task_map (tasks):
         task_map["COMPUTE"] = PersistTaskProcessor("COMPUTE", "PERSIST")
     else:
         # demo to show that you can insert a step into the tuple space.
-        if task == "COMPUTE_THRESHOLD":
-            task_map["NEW"] = ComputeThresholdTaskProcessor("COMPUTE", "COMPUTE-THRESHOLD")
+        # 1.  This worker only deals with ComputeThresholdTask.
+        # 2.  Register this worker with the tuple-space.
+        #     TuoleSpace already has Persist registered against COMPUTE
+        #     Tell  TupleSpace that After Compute, we need to compute threshold.
+        #     Tuple space then will notify the current existing PersitTask to listen to COMPUTE-THRESHOLD
+        #     instead of COMPUTE.
+        # 3.  At this point, no one is listening to COMPUTE.  Start the compute listening thread
+        reregister_state ("COMPUTE", "COMPUTE_THRESHOLD", "PERSIST")
 
-        reregister_state ("COMPUTE", "COMPUTE-THRESHOLD", "PERSIST")
+        if task == "COMPUTE_THRESHOLD":
+            task_map["COMPUTE"] = ComputeThresholdTaskProcessor("COMPUTE", "COMPUTE_THRESHOLD")
+
 
     for k,v in task_map.items():
         v.start()
@@ -139,7 +161,7 @@ if __name__ == "__main__":
 
         register_to_tuplespace(port)
 
-        app.run(port=port, debug=True)
+        app.run(port=port, debug=True, use_reloader=False)
 
     except getopt.GetoptError as err:
         print (str(err))  # will print something like "option -a not recognized"

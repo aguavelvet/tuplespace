@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 import os
 import ssl
@@ -12,9 +13,10 @@ from tuplespace.tuplespace import TupleSpace
 from tuplespace.tuplespace import TaskItem
 
 path = os.path.dirname(__file__)
-app  = Flask(__name__)
 
 tuplespace = TupleSpace (["NEW", "VALIDATE", "EMBELLISH", "COMPUTE", "PERSIST"])
+
+app = Flask(__name__)
 
 
 @app.route('/tuplespace/api/v1/register', methods=['POST'])
@@ -25,6 +27,7 @@ def register_worker():
 
     id = rqst.form['id']
     state = rqst.form['state']
+    post_state = rqst.form['post_state']
     host = rqst.form['host']
     port = rqst.form['port']
     endpt = rqst.form['endpoint']
@@ -33,7 +36,7 @@ def register_worker():
         resp["response"] = "Invalid request. Missing one of id, state and/or url"
     else:
         try:
-            tuplespace.register(id, state, host,port,endpt)
+            tuplespace.register(id, state, post_state, host,port,endpt)
 
             status  = 200
             resp["status"] = status
@@ -76,6 +79,27 @@ def register_worker_state():
     return response
 
 
+@app.route('/tuplespace/api/v1/show-registry', methods=['GET'])
+def show_tuplespace_registry():
+    rqst = request
+    status = 400
+    resp = {"status": status, "response": ""}
+
+    try:
+        status  = 200
+        resp["status"] = status
+        body = tuplespace.registry
+
+        resp["message"] = body
+    except Exception as ex:
+        resp["message"] = str(ex)
+
+    response = make_response(json.dumps(resp, indent=4), status)
+    response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+    return response
+
+
 @app.route('/tuplespace/api/v1/new', methods=['POST'])
 def new_task():
     rqst = request
@@ -104,31 +128,28 @@ def new_task():
     return response
 
 
-@app.route('/tuplespace/api/v1/read', methods=['POST'])
-def read():
+@app.route('/tuplespace/api/v1/getall', methods=['GET'])
+def get_all():
     rqst = request
     status = 400
-    resp = {"status": status, "response": "oh oh..."}
+    resp = {"status": status, "response": ""}
 
-    body = rqst.get_json()
-    if body is None:
-        resp["response"] = "Invalid request. Missing body"
-    else:
-        try:
-            id = tuplespace.read (body)
+    try:
 
-            status = 200
-            resp["status"] = status
-            resp["message"] = ""
-            resp["id"] = id
+        tasks = tuplespace.get_all()
+        tasks = [ json.loads(t.toJSON())  for t in tasks]
+        status = 200
+        resp["status"] = status
+        resp["message"] = tasks
 
-        except Exception as ex:
-            resp["message"] = str(ex)
+    except Exception as ex:
+        resp["message"] = str(ex)
 
-    response = make_response(json.dumps(resp), status)
+    response = make_response(json.dumps (resp, indent=4), status)
     response.headers['Content-Type'] = "application/json; charset=utf-8"
 
     return response
+
 
 @app.route('/tuplespace/api/v1/checkout', methods=['GET'])
 def checkout():
@@ -159,11 +180,12 @@ def checkout():
 
     return response
 
+
 @app.route('/tuplespace/api/v1/checkin', methods=['POST'])
 def checkin():
     rqst = request
     status = 400
-    resp = {"status": status, "response": "oh oh..."}
+    resp = {"status": status, "response": ""}
 
     try:
         payload = rqst.get_json()
@@ -174,7 +196,6 @@ def checkin():
             resp["status"] = status
             resp["state"] = task.get_state()
             resp["message"] = "checked in"
-
 
     except Exception as ex:
         resp["message"] = str(ex)
@@ -191,5 +212,5 @@ if __name__ == "__main__":
     if os.getenv("FLASK_RUN_PORT") is not None:
         port = int(os.getenv("FLASK_RUN_PORT"))
 
-    app.run(port=port,debug=True)
+    app.run(port=port,debug=True, use_reloader=False)
 
