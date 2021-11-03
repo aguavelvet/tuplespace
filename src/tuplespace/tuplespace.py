@@ -123,10 +123,10 @@ class TupleSpace:
         return item
 
     def get_all (self, state:str) :
-        return  list(filter(lambda t: t.get_state() == state, list(self.spacemap.values())))
+        return list(filter(lambda t: t.get_state() == state, list(self.spacemap.values())))
 
-    def get_all (self) :
-        return  list(self.spacemap.values())
+    def get_all_tasks (self) :
+        return list(self.spacemap.values())
 
     def find (self, state:str) -> TaskItem:
 

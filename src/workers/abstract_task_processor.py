@@ -7,7 +7,6 @@ from tuplespace.taskitem import TaskItem
 
 class AbstractTaskProcessor(threading.Thread):
 
-
     def __init__ (self, request_state, post_state):
         threading.Thread.__init__(self)
         self.request_state = request_state

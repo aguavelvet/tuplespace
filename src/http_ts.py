@@ -135,12 +135,11 @@ def get_all():
     resp = {"status": status, "response": ""}
 
     try:
-
-        tasks = tuplespace.get_all()
-        tasks = [ json.loads(t.toJSON())  for t in tasks]
+        tasks = tuplespace.get_all_tasks()
+        items = [ t.toJSON()  for t in tasks]
         status = 200
         resp["status"] = status
-        resp["message"] = tasks
+        resp["message"] = items
 
     except Exception as ex:
         resp["message"] = str(ex)

@@ -15,7 +15,8 @@ class EmbellishTaskProcessor(AbstractTaskProcessor):
 
         emblish = {"created-by": f"embellish proces id {os.getpid()}",
                    "started-at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                   "validation": {"embellished-1": "You wouldn't believe what I've seen",
+                   "embellished": {
+                        "embellished-1": "You wouldn't believe what I've seen",
                         "embellished-2": "with your eyes ....",
                         "embellished-3": "I've stood on the back deck of a blinker bound for the Plutition Camps",
                         "embellished-4": " with sweat in my eyes watching stars fight on the shoulder of Orion.."

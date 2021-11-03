@@ -28,11 +28,11 @@ The operations are:
 
 [Diagram 1]
 
-![Screen Shot 2021-10-16 at 12.32.10 PM](/Users/kikim/Desktop/Screen Shot 2021-10-16 at 12.32.10 PM.png)
+![Tuple Space](./tuplespace.png/Users/kikim/Desktop/Screen Sho)
 
 
 
-Diagram 1 depicts how a tuple space could potentially be used. 
+##### Diagram 1 depicts how a tuple space could potentially be used. 
 
 ### Input
 
@@ -59,7 +59,7 @@ We see that we can provide state transitions easily enough perhaps even sharing 
 
 
 
-### 
+
 
 ## Benefits
 
@@ -119,4 +119,149 @@ Since all the components (TupleSpace and workers) are built as docker containers
 
 
 
+## Short Commings
+
+### Large Data 
+
+TupleSpace does not do well, if the payload is large for obvious reasons. There are ways to mitigate the large memory requirement, but in general,  TS is not suitable for large payload work flow.
+
+### Data Dependencies
+
+If there are lots of data depencies, tuple space may not be a good solution. For example, if each task needs to make multiple database calls, it may not be the right solution to use.
+
+### Generates lots of IPC
+
+TupleSpace performs lots of Interprocess communications.  The amount of IPC depends on the size of the payload as well as the number of steps.
+
+### Flexibility VS Tricky Code
+
+TupleSpace offers many benefits that are attractive for many solution space.  The cost comes in the form of tricky control flow.  For the novices, it may take a bit of familiarization to understand the control flow.
+
+### Failure Step haults the entire work flow
+
+This issue seems a lot more critical than it is, when compared to say a monolithic application.  If there is a work flow step that fails, all processing will stop at the point of failure.  We can replay from the failure point, once the fix has been made.
+
+
+
+
+
+
+
 # Implementation
+
+This TupleSpace implementation is very basic in that:
+
+* Based on python Dictionary.
+* Some efforts were made to find an implementation including a JavaSpace solution.  Very little work has been done with tuple space in the past 10 years.
+  * GigaSpace. Commercial.  So did not pursue further.
+  * Apache-Camel. 
+* Based on HTTP.  
+
+Supporting AWS SQS would be a good task to pursue next 
+
+
+
+## Development Environment
+
+See: https://github.com/aguavelvet/tuplespace
+
+### Steps:
+
+```
+git clone https://github.com/aguavelvet/tuplespace.git
+cd tuplespace
+python3 -m venv venv
+pip install -r requirements.txt
+```
+
+
+
+### Run:
+
+tuplespace flask app:
+
+```
+cd tuplespace/src
+python3 http_ts.py
+```
+
+Workers app:
+
+```py
+cd tuplespace/src
+python3 worker.py
+```
+
+Note: pymongo install requires sudo
+
+
+
+## Adding additional Tasks
+
+There are three steps in creating an additional Task:
+
+1.  code. For this task, please subclass AbstractTaskProcessor and implement the process method.
+2. Determine what step you need to inject the task in and ensure that the work flow step is correct.
+3. Create a worker flask instance that instantiates and registers the task to tuplespace.
+
+### Step by Step
+
+Suppose we wish to add the task step called Peek.  This task will be inserted into the work flow so we can peek at the state of the task.
+
+#### Code
+
+```python
+class Peek(AbstractTaskProcessor):
+
+    def __init__ (self, request_state, post_state):
+        super().__init__(request_state, post_state)
+
+    def process(self, task: TaskItem) -> TaskItem:
+        ''' just dump to standard out'''
+        print (task);
+        return task
+
+```
+
+### Where?
+
+We want to insert this task just before PERSIST.
+
+#### Worker Flask
+
+Please take a look at the worker.py file.  This is the template worker class.  In this class, we want to instantiate  the new class and register it to the tuplespace.
+
+To perform this task, all we need to do is update the ``` initialize_task_map``` method:
+
+```
+def initialize_task_map (tasks):
+    # demo to show that you can insert a step into the tuple space.
+    # 1.  This worker only deals with Peek.
+    # 2.  Register this worker with the tuple-space.
+    #     TupleSpace already has Persist registered against COMPUTE
+    #     Tell  TupleSpace that After Compute, we need to Peek.
+    #     Tuple space then will notify the current existing PersistTask to listen to
+    #     PEEK instead of COMPUTE.
+    # 3.  At this point, no one is listening to COMPUTE.  
+    #     Start the Peek listening thread
+    reregister_state ("COMPUTE", "PEEK", "PERSIST")
+    task_map["COMPUTE"] = Peek("COMPUTE", "PEEK")
+
+		#  start the thread
+    for k,v in task_map.items():
+        v.start()
+
+```
+
+And we are done!
+
+
+
+
+
+## Next Steps
+
+* Add SQS
+* Add additional tasks
+* Code clean up and Load Test
+* Hook in Buddha's hand for more nifty functional programming.
